@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { useState } from 'react';
+import './styles.css'
+import NewTodoForm from './NewTodoForm';
+import ToDoList from './ToDoList';
+import SearchBar from './SearchBar';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // everytime you change state it re-
+  // renders the component
+  const [todos, setTodos] = useState(() => {
+    const localItem = localStorage.getItem("ITEMS");
+    return localItem ? JSON.parse(localItem) : [];
+  });
+  const [search, setSearch] = useState("");
+
+  function addTodo (title) {
+    console.log("made it here");
+    setTodos(prevTodos => [...prevTodos, {title, id: crypto.randomUUID(), completed: false}]);
+  }
+
+  function toggleTodo(id) { 
+    setTodos(
+      todos.map(todo => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            completed: !todo.completed
+          }
+        }
+        return todo;
+      })
+    )
+  }
+
+  function deleteTodo(id) {
+    setTodos(
+      todos.filter(todo => {
+        return todo.id !== id
+      })
+    )
+  }   
+
+  const filteredTodos = todos.filter(todo => {
+    return todo.title.toLowerCase().includes(search.toLowerCase());
+  })
+
+  useEffect(() => {
+    localStorage.setItem("ITEMS", JSON.stringify(todos));
+  }, [todos])
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <React.Fragment>
+      <NewTodoForm onSubmit={addTodo}/>
+      <SearchBar search={search} setSearch={setSearch}/>
+      <h1 className="header" >Todo List</h1>
+      <ToDoList todos={filteredTodos} toggleTodo={toggleTodo} deleteTodo={deleteTodo}/>
+    </React.Fragment>
   )
 }
 
-export default App
+export default App;
